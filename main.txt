@@ -1,3 +1,12 @@
+
+/**
+ * main.
+ *  RS = GPIOE1
+ *  RW = GPIO E2
+ *  E = GPIO E3
+ */
+
+
 #include <stdint.h>
 #include <stdbool.h>
 #include "inc/hw_memmap.h"
@@ -5,21 +14,51 @@
 #include "driverlib/sysctl.h"
 #include "driverlib/gpio.h"
 
-uint8_t ui8PinData=2;
+
+ //SysCtlClockSet(SYSCTL_SYSDIV_4|SYSCTL_USE_PLL|SYSCTL_XTAL_16MHZ|SYSCTL_OSC_MAIN);
+ void send_command(unsigned char RS, unsigned char RW, unsigned char data);
 
 int main(void)
+
 {
-	SysCtlClockSet(SYSCTL_SYSDIV_5|SYSCTL_USE_PLL|SYSCTL_XTAL_16MHZ|SYSCTL_OSC_MAIN);
+    SysCtlClockSet(SYSCTL_SYSDIV_5|SYSCTL_USE_PLL|SYSCTL_XTAL_16MHZ|SYSCTL_OSC_MAIN);
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOE);
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB);
+    GPIOPinTypeGPIOOutput(GPIO_PORTE_BASE,GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3);
+    GPIOPinTypeGPIOOutput(GPIO_PORTB_BASE,GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7);
 
-	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
-	GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3);
+uint8_t RS = 0;
+uint8_t RW = 0;
+uint8_t data = 0x01;
 
-	while(1)
-	{
-		GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3, ui8PinData);
-		SysCtlDelay(2000000);
-		GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3, 0x00);
-		SysCtlDelay(2000000);
-		if(ui8PinData==8) {ui8PinData=2;} else {ui8PinData=ui8PinData*2;}
-	}
+
+   send_command(0x00,0x00,0x30);
+   send_command(0x00,0x00,0x01);
+   SysCtlDelay(2000);
+   send_command(0x00,0x00,0x0E);
+   send_command(0x00,0x00,0x06);
+   send_command(0xFF,0x00,0X50);
+   send_command(0xFF,0x00,0X4F);
+   send_command(0xFF,0x00,0X4F);
+   send_command(0xFF,0x00,0X50);
+
+
+
+    while(1)
+    {
+
+    }
+
 }
+
+ void send_command(uint8_t RS, uint8_t RW, uint8_t data){
+    GPIOPinWrite(GPIO_PORTE_BASE,GPIO_PIN_3,0xFF);       //Set LCD Enable Pin high to commence character write
+    SysCtlDelay(20000);
+   GPIOPinWrite(GPIO_PORTE_BASE, GPIO_PIN_1, RS);
+   GPIOPinWrite(GPIO_PORTE_BASE, GPIO_PIN_2, RW);
+   GPIOPinWrite(GPIO_PORTB_BASE, GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7,data);
+   GPIOPinWrite(GPIO_PORTE_BASE,GPIO_PIN_3,0X00);      // set enable pin low to end to character write
+   SysCtlDelay(20000);
+
+    }
+
